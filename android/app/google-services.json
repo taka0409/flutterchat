@@ -1,0 +1,97 @@
+{
+  "project_info": {
+    "project_number": "318128722996",
+    "project_id": "flutter-chat-application-64855",
+    "storage_bucket": "flutter-chat-application-64855.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:318128722996:android:11e3c4614d0a67c7a46661",
+        "android_client_info": {
+          "package_name": "com.sampletakahashi.flutterchat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "318128722996-1qlc4mdbt1seb39mh91jufeqvthmjvip.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbso5culmo5C3EIBlQD3BVwtK-M5bWb1w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "318128722996-1qlc4mdbt1seb39mh91jufeqvthmjvip.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:318128722996:android:0f17b0fc14360878a46661",
+        "android_client_info": {
+          "package_name": "jp.seiya.suzuki.flutterChatApplication"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "318128722996-1qlc4mdbt1seb39mh91jufeqvthmjvip.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbso5culmo5C3EIBlQD3BVwtK-M5bWb1w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "318128722996-1qlc4mdbt1seb39mh91jufeqvthmjvip.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:318128722996:android:48189e8cd3b0871ea46661",
+        "android_client_info": {
+          "package_name": "jp.takahiko.sakai.flutterchat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "318128722996-1qlc4mdbt1seb39mh91jufeqvthmjvip.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbso5culmo5C3EIBlQD3BVwtK-M5bWb1w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "318128722996-1qlc4mdbt1seb39mh91jufeqvthmjvip.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
