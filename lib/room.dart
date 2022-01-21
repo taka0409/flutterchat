@@ -104,13 +104,8 @@ class Room extends ConsumerWidget {
 
 Widget messages(roomId) {
   return StreamBuilder(
-      stream: _db
-          .collection('rooms')
-          .doc(roomId)
-          .collection('messages')
-          .orderBy('time')
-          .snapshots(),
-      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snap) {
+      stream: messagesStream(roomId),
+      builder: (BuildContext context, AsyncSnapshot<List<MessageInfo>> snap) {
         final List<Widget> tmp = [];
         final ret = Column(children: tmp);
         final userNameMap = {};
@@ -129,17 +124,16 @@ Widget messages(roomId) {
         var befSender = '';
         var nowSender = '';
 
-        snap.data!.docs.forEach((element) {
+        snap.data!.forEach((element) {
 
-          var isMyMessage = element.get('sender') == user!.email;
-          var nowDateTime = element.get('time').toDate();
+          var isMyMessage = element.sender == user!.email;
+          var nowDateTime = element.time.toDate();
           nowDate = outputDate.format(nowDateTime);
           nowTime = outputTime.format(nowDateTime);
-          nowSender = element.get('sender');
-          // if (!userNameMap.containsKey(nowSender)) {
-          //   var name = await _db.collection('users').doc(nowSender).get();
-          //   print(name.get('name'));
-          // }
+          nowSender = element.sender;
+          if (!userNameMap.containsKey(element.name)) {
+            userNameMap[element.sender] = element.name;
+          }
           if (nowDate != befDate) {
             tmp.add(dateMessageWidget(nowDate));
           }
@@ -147,9 +141,9 @@ Widget messages(roomId) {
             tmp.add(nameMessageWidget(userNameMap[nowSender]));
           }
           if (nowSender != befSender || befTime != nowTime) {
-            tmp.add(myMessageWidget(isMyMessage, element.get('message'), nowTime));
+            tmp.add(myMessageWidget(isMyMessage, element.message, nowTime));
           } else {
-            tmp.add(myMessageWidget(isMyMessage, element.get('message'), ''));
+            tmp.add(myMessageWidget(isMyMessage, element.message, ''));
           }
           befDate = nowDate;
           befTime = nowTime;
@@ -260,8 +254,36 @@ Widget nameMessageWidget(name) {
   );
 }
 
-// Future<String> getUserData(nowSender) async {
-//   var doc = await _db.collection('users').doc(nowSender).get();
-//   var name = await doc.get('name');
-//   return Future<String>.value(name);
-// }
+class MessageInfo {
+  late String sender;
+  late String name;
+  late String message;
+  late Timestamp time;
+
+  MessageInfo(sender, name, message, time) {
+    this.sender = sender;
+    this.name = name;
+    this.message = message;
+    this.time = time;
+  }
+}
+
+Future<MessageInfo> generateMessageInfo(QueryDocumentSnapshot message) async {
+  var name = await getUserData(message.get('sender'));
+  return MessageInfo(message.get('sender'),name,message.get('message'),message.get('time'));
+}
+Stream<List<MessageInfo>> messagesStream(roomId) {
+  return _db
+    .collection('rooms')
+    .doc(roomId)
+    .collection('messages')
+    .orderBy('time')
+    .snapshots()
+    .asyncMap((messages) => Future.wait([for (var message in messages.docs) generateMessageInfo(message)]));
+}
+
+Future<String> getUserData(nowSender) async {
+  var doc = await _db.collection('users').doc(nowSender).get();
+  var name = await doc.get('name');
+  return Future<String>.value(name);
+}
