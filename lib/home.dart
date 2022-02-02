@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutterchat/provider.dart';
-import 'room.dart';
 import 'entry.dart';
 
 class Home extends StatelessWidget {
@@ -65,7 +64,7 @@ class HomePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
                     TextFormField(
-                      decoration: const InputDecoration(labelText: "パスワード"),
+                      decoration: const InputDecoration(labelText: "パスワード(6文字以上)"),
                       obscureText: true,
                       onSaved: (value) {
                         password = value!;

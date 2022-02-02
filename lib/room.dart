@@ -116,7 +116,6 @@ Widget messages(roomId) {
         }
 
         var befDate = '';
-        var befTime = '';
         var nowDate = '';
         var nowTime = '';
         DateFormat outputDate = DateFormat('yyyy-MM-dd');
@@ -140,13 +139,10 @@ Widget messages(roomId) {
           if (befSender != nowSender && !isMyMessage) {
             tmp.add(nameMessageWidget(userNameMap[nowSender]));
           }
-          if (nowSender != befSender || befTime != nowTime) {
-            tmp.add(myMessageWidget(isMyMessage, element.message, nowTime));
-          } else {
-            tmp.add(myMessageWidget(isMyMessage, element.message, ''));
-          }
+
+          tmp.add(myMessageWidget(isMyMessage, element.message, nowTime));
+
           befDate = nowDate;
-          befTime = nowTime;
           befSender = nowSender;
         });
         return ret;
