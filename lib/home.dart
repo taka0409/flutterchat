@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutterchat/provider.dart';
-import 'entry.dart';
+import 'package:flutterchat/room.dart';
 
 class Home extends StatelessWidget {
   @override
@@ -82,7 +82,7 @@ class HomePage extends StatelessWidget {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => Entry()
+                                  builder: (context) => Room()
                               )
                           );
                         } catch (e) {
@@ -112,7 +112,7 @@ class HomePage extends StatelessWidget {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => Entry()
+                                  builder: (context) => Room()
                               )
                           );
                         } catch (e) {
