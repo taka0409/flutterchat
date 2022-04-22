@@ -1,5 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutterchat/size_config.dart';
@@ -7,12 +9,13 @@ import 'package:intl/intl.dart';
 
 final _auth = FirebaseAuth.instance;
 final _db = FirebaseFirestore.instance;
+final _storage = FirebaseStorage.instance;
 
 class Room extends ConsumerWidget {
   @override
   Widget build(BuildContext context, ScopedReader watch) {
     final user = _auth.currentUser;
-    final roomIdProvider = StateProvider((ref) => '2525');
+    final roomIdProvider = StateProvider((ref) => '1111');
     final roomId = watch(roomIdProvider).state;
     late String message;
     final _form = GlobalKey<FormState>();
@@ -93,7 +96,8 @@ class Room extends ConsumerWidget {
                       });
                       _textEditingController.clear();
                     },
-                  ))
+                  )
+              )
             ],
           ),
         )
@@ -105,7 +109,7 @@ class Room extends ConsumerWidget {
 Widget messages(roomId) {
   return StreamBuilder(
       stream: messagesStream(roomId),
-      builder: (BuildContext context, AsyncSnapshot<List<MessageInfo>> snap) {
+      builder: (BuildContext context, AsyncSnapshot<List<BaseMessageInfo>> snap) {
         final List<Widget> tmp = [];
         final ret = Column(children: tmp);
         final userNameMap = {};
@@ -124,7 +128,6 @@ Widget messages(roomId) {
         var nowSender = '';
 
         snap.data!.forEach((element) {
-
           var isMyMessage = element.sender == user!.email;
           var nowDateTime = element.time.toDate();
           nowDate = outputDate.format(nowDateTime);
@@ -139,17 +142,18 @@ Widget messages(roomId) {
           if (befSender != nowSender && !isMyMessage) {
             tmp.add(nameMessageWidget(userNameMap[nowSender]));
           }
-
-          tmp.add(myMessageWidget(isMyMessage, element.message, nowTime));
-
+          if (element is TextMessageInfo) {
+            tmp.add(bubbleMessageWidget(isMyMessage, textMessageWidget(element.message), nowTime));
+          } else if (element is ImageMessageInfo) {
+            tmp.add(bubbleMessageWidget(isMyMessage, element.image, nowTime));
+          }
           befDate = nowDate;
           befSender = nowSender;
         });
         return ret;
       });
 }
-
-Widget myMessageWidget(isMyMessage, content, time) {
+Widget bubbleMessageWidget(isMyMessage, content, time) {
   if (isMyMessage) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -158,7 +162,7 @@ Widget myMessageWidget(isMyMessage, content, time) {
         timeMessageWidget(time),
         ConstrainedBox(
             constraints:
-                BoxConstraints(maxWidth: SizeConfig.blockSizeHorizontal * 70),
+            BoxConstraints(maxWidth: SizeConfig.blockSizeHorizontal * 70),
             child: Container(
               padding: EdgeInsets.all(5),
               child: Card(
@@ -167,12 +171,11 @@ Widget myMessageWidget(isMyMessage, content, time) {
                   color: Colors.blue,
                   child: Padding(
                       padding: EdgeInsets.all(5),
-                      child: SelectableText(content,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 30,
-                          )))),
-            ))
+                      child: content
+                  )
+              ),
+            )
+        )
       ],
     );
   } else {
@@ -182,7 +185,7 @@ Widget myMessageWidget(isMyMessage, content, time) {
       children: [
         ConstrainedBox(
             constraints:
-                BoxConstraints(maxWidth: SizeConfig.blockSizeHorizontal * 70),
+            BoxConstraints(maxWidth: SizeConfig.blockSizeHorizontal * 70),
             child: Container(
                 padding: EdgeInsets.all(5),
                 child: Card(
@@ -191,14 +194,22 @@ Widget myMessageWidget(isMyMessage, content, time) {
                     color: Colors.grey[200],
                     child: Padding(
                         padding: EdgeInsets.all(5),
-                        child: SelectableText(content,
-                            style: TextStyle(
-                              fontSize: 30,
-                            )))))),
+                        child: content
+                    )
+                ),
+            )
+        ),
         timeMessageWidget(time)
       ],
     );
   }
+}
+
+Widget textMessageWidget(text) {
+  return SelectableText(text,
+      style: TextStyle(
+        fontSize: 30,
+      ));
 }
 
 Widget dateMessageWidget(date) {
@@ -250,33 +261,65 @@ Widget nameMessageWidget(name) {
   );
 }
 
-class MessageInfo {
+class BaseMessageInfo {
   late String sender;
   late String name;
-  late String message;
   late Timestamp time;
 
-  MessageInfo(sender, name, message, time) {
+  BaseMessageInfo(String sender, String name, Timestamp time) {
     this.sender = sender;
     this.name = name;
-    this.message = message;
     this.time = time;
   }
 }
 
-Future<MessageInfo> generateMessageInfo(QueryDocumentSnapshot message) async {
-  var name = await getUserData(message.get('sender'));
-  return MessageInfo(message.get('sender'),name,message.get('message'),message.get('time'));
+class TextMessageInfo extends BaseMessageInfo {
+  late String message;
+
+  TextMessageInfo(String sender, String name, Timestamp time, String message): super(sender, name, time) {
+    this.message = message;
+  }
 }
 
-Stream<List<MessageInfo>> messagesStream(roomId) {
+class ImageMessageInfo extends BaseMessageInfo {
+  late Image image = Image(
+    image: NetworkImage(
+        'https://flutter.github.io/assets-for-api-docs/assets/widgets/owl.jpg'),
+  );
+
+  ImageMessageInfo(String sender, String name, Timestamp time, Image image) : super(sender, name, time) {
+    this.image = image;
+  }
+}
+
+Future<BaseMessageInfo> generateMessageInfo(QueryDocumentSnapshot<Map<String, dynamic>> message, roomId) async {
+  var messageData = message.data();
+  var doc = await _db.collection('users').doc(message.get('sender')).get();
+  var nickName = await doc.get('name');
+  bool? isImage = false;
+  if(messageData.containsKey('isImage')) {
+    isImage = await message.get('isImage');
+  }
+
+  if (isImage != null && isImage) {
+    final fileName = message.id;
+    final filePath = "images/" + roomId + "/" + fileName;
+    final String url = await _storage.ref(filePath).getDownloadURL();
+    final image = new Image(image: new CachedNetworkImageProvider(url));
+    return ImageMessageInfo(message.get('sender'), nickName, message.get('time'), image);
+  } else {
+    return TextMessageInfo(message.get('sender'), nickName, message.get('time'), message.get('message'));
+  }
+}
+
+Stream<List<BaseMessageInfo>> messagesStream(roomId) {
   return _db
     .collection('rooms')
     .doc(roomId)
     .collection('messages')
     .orderBy('time')
     .snapshots()
-    .asyncMap((messages) => Future.wait([for (var message in messages.docs) generateMessageInfo(message)]));
+    .asyncMap((messages) => Future.wait([for (var message in messages.docs) generateMessageInfo(message, roomId)]));
 }
 
 Future<String> getUserData(nowSender) async {
